@@ -22,16 +22,19 @@
 
 #define LOAD_FACTOR_THRESHOLD 0.7
 
-static void memAllocError(const char *err) {
+void memAllocError(const char *err) {
     fprintf(stderr, "Cannot allocate a memory for %s.\n", err);
     exit(EXIT_FAILURE);
 }
 
 // FNV-1a (Fowler-Noll-Vo) Algorithm
-static uint32_t hash(char *key, size_t size) {
+uint32_t hash(char *key, size_t size) {
+    if (key == NULL) return 0;
+    if (key[0] == '\0') return 0;
+
     uint32_t hashValue = 2166136261; // FNV offset basis
 
-    for(size_t i = 0; key[i] != '\0'; i++) {
+    for (size_t i = 0; key[i] != '\0'; i++) {
         hashValue ^= (unsigned char)key[i];
         hashValue *= 16777619; // FNV prime
     }
@@ -39,7 +42,7 @@ static uint32_t hash(char *key, size_t size) {
     return hashValue % size;
 }
 
-static HashSlot *createHashSlot() {
+HashSlot *createHashSlot() {
     HashSlot *hashSlot = malloc(sizeof(HashSlot));
 
     if(!hashSlot)
@@ -52,7 +55,7 @@ static HashSlot *createHashSlot() {
     return hashSlot;
 }
 
-static void freeNewTable(HashSlot **table, size_t size) {
+void freeNewTable(HashSlot **table, size_t size) {
     // Free the new hash table
     for(size_t i = 0; i < size; i++)
         if(table[i]) {
@@ -70,7 +73,7 @@ static void freeNewTable(HashSlot **table, size_t size) {
     table = NULL;
 }
 
-static void hashTableResize(HashTable *hashTable) {
+void hashTableResize(HashTable *hashTable) {
     size_t newSize = hashTable->size * 2;
     HashSlot **newTable = calloc(newSize, sizeof(HashSlot *));
 
@@ -146,7 +149,7 @@ static void hashTableResize(HashTable *hashTable) {
     hashTable->table = newTable;
 }
 
-static void hashTableSet(HashTable *hashTable, char *key, char *value) {
+void hashTableSet(HashTable *hashTable, char *key, char *value) {
     if(!hashTable || hashTable->size == 0) {
         fputs("Cannot set a value for an unallocated hash table.\n", stderr);
         return;
@@ -222,7 +225,7 @@ static void hashTableSet(HashTable *hashTable, char *key, char *value) {
     current->occupied = 1;
 }
 
-static const char *hashTableGet(HashTable *hashTable, char *key) {
+const char *hashTableGet(HashTable *hashTable, char *key) {
     if(!hashTable || hashTable->elementCount == 0 || !key || *key == '\0')
         return NULL;
 
@@ -239,7 +242,7 @@ static const char *hashTableGet(HashTable *hashTable, char *key) {
     return NULL;
 }
 
-static void hashTableDelete(HashTable *hashTable, char *key) {
+void hashTableDelete(HashTable *hashTable, char *key) {
     if(!hashTable || hashTable->elementCount == 0 || !key || *key == '\0')
         return;
 
@@ -271,7 +274,7 @@ static void hashTableDelete(HashTable *hashTable, char *key) {
     }
 }
 
-static _Bool hashTableHas(HashTable *hashTable, char *key) {
+_Bool hashTableHas(HashTable *hashTable, char *key) {
     if(!hashTable || hashTable->elementCount == 0 || !key)
         return 0;
 
@@ -288,7 +291,7 @@ static _Bool hashTableHas(HashTable *hashTable, char *key) {
     return 0;
 }
 
-static void hashTableFree(HashTable **hashTablePtr) {
+void hashTableFree(HashTable **hashTablePtr) {
     HashTable *hashTable = *hashTablePtr;
 
     if(!hashTable || !hashTable->table || hashTable->size == 0)
@@ -319,7 +322,7 @@ static void hashTableFree(HashTable **hashTablePtr) {
     *hashTablePtr = NULL;
 }
 
-static void hashTablePrint(HashTable *hashTable) {    
+void hashTablePrint(HashTable *hashTable) {    
     if(!hashTable || !hashTable->table)
         return;
 
@@ -330,7 +333,7 @@ static void hashTablePrint(HashTable *hashTable) {
             printf("%zu. {%s} -> {%s}\n", ++count, hashTable->table[i]->key, hashTable->table[i]->value);
 }
 
-static size_t hashTableSize(HashTable *hashTable) {
+size_t hashTableSize(HashTable *hashTable) {
     if(!hashTable) {
         fputs("Hash table is NULL.\n", stderr);
         return 0;
@@ -339,7 +342,7 @@ static size_t hashTableSize(HashTable *hashTable) {
     return hashTable->size;
 }
 
-static size_t hashTableCount(HashTable *hashTable) {
+size_t hashTableCount(HashTable *hashTable) {
     if(!hashTable) {
         fputs("Hash table is NULL.\n", stderr);
         return 0;
@@ -349,7 +352,7 @@ static size_t hashTableCount(HashTable *hashTable) {
 }
 
 HashTable *initHashTable(size_t initSize) {
-    HashTable *hashTable = malloc(sizeof(HashTable));
+    HashTable *hashTable = calloc(1, sizeof(HashTable));
 
     if(!hashTable) {
         memAllocError("hash table struct");

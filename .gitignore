@@ -1,0 +1,10 @@
+# Ignore IDE stuff
+.vscode/
+
+# Ignore everything in tests/, except code
+tests/*
+!tests/*.c
+
+# Ignore compiled libaries and object files
+*.a
+*.o
